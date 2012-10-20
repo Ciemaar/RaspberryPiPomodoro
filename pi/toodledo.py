@@ -47,7 +47,7 @@ def update_task_numbers():
         if taskRegex.match(task.title):
             continue
         newNum = taskNumbers.pop()
-        client.editTask(task.id, title=("[%d] " % newNum) + task.title)
+        client.editTask(task.id, title=("[%s] " % newNum) + task.title)
 
 if __name__ == '__main__':
     update_task_numbers()
