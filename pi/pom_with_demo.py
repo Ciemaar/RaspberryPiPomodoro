@@ -1,20 +1,9 @@
-import time
 import RPi.GPIO as GPIO
-from toodledo import get_pom_tasks,config, taskRegex, save_current_config, update_task_numbers, client
-import os
-
-try:
-    rows, columns = os.popen('stty size', 'r').read().split()
-    rows = int(rows)
-except ValueError:
-    rows = 56
+import time
 
 GPIO.setmode(GPIO.BOARD)
 GPIO.setup(11, GPIO.OUT)
 GPIO.setup(12, GPIO.IN)
-GPIO.setup(16, GPIO.IN)
-GPIO.setup(18, GPIO.IN)
-GPIO.setup(22, GPIO.IN)
 
 class State(object):
     def __init__(self, name):
@@ -29,11 +18,6 @@ BREAK_END = State("breakend")
 blink_time = time.time()
 button_time = None
 state_time = time.time()
-update_time = 0
-display_time = 0
-pom_time = 0
-pom_tasks = []
-
 state = STARTUP
 led_on = False
 led_curr = False
@@ -48,14 +32,9 @@ WARN_TIME = 2*60 * accel
 def state_change(new_state):
     global state, state_time, button_time
     state_time = time.time()
-    #print "\n",state.name,"->",new_state.name,"\n"
-    if state is POM and new_state is BREAK and currentTask is not None: # normal end of POM
-        client.editTask(currentTask.id, note = "Completed a POM")
+    print "\n",state.name,"->",new_state.name,"\n"
     state = new_state
     button_time = time.time() + 3 * LONG_PUSH
-
-if not config.has_section('cache'):
-    config.add_section('cache')
 
 while True:
     pushed = 0
@@ -117,36 +96,4 @@ while True:
       led_curr = led_on
       GPIO.output(11, led_curr)
 
-    if time.time() > pom_time + 60: # Rate limit 2 calls per minute
-        try:
-            currentTaskNo = str((1-GPIO.input(16))+ 2 * (1-GPIO.input(18))+ 4 *(1-GPIO.input(22)))
-            currentTask = None
-
-            pom_tasks = get_pom_tasks()
-            pom_time = time.time()
-            for task in pom_tasks:
-                extract = taskRegex.match(task.title)
-                if extract:
-                   taskNo = extract.group(1)
-                   if taskNo == currentTaskNo:
-                       currentTask = task
-                config.set("cache","task"+taskNo,task.title)
-            config.set("cache","pom_time",str(pom_time))
-            save_current_config()
-        except:
-            pass
-
-    if time.time() > display_time + 15: # refresh every 15 seconds
-        print "\n"*(rows-(3+len(pom_tasks)))
-        for task in pom_tasks:
-            print task.title, task.duedate
-        print "Currently:",currentTaskNo
-        if currentTask is not None:
-            print currentTask.title
-        else:
-            print "No Task\n"
-        display_time = time.time()
-
-    if time.time() > update_time + 600: # update task numbers every 10 minutes
-        update_task_numbers()
-        update_time = time.time()
+    print state.name,"\t\t",time.time()-state_time, pushed,"\r",
