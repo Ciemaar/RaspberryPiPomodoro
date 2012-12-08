@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#Fake RPi GPIO module originally from http://raspberry-python.blogspot.com/2012/12/fake-rpigpio.html
 IN = 1
 OUT = 0
 HIGH = True
