@@ -11,6 +11,7 @@ GPIO.setup(11,GPIO.IN)
 GPIO.setup(12,GPIO.IN)
 GPIO.setup(13,GPIO.OUT)
 GPIO.setup(15,GPIO.OUT)
+GPIO.output(13,True)
 GPIO.output(15,True)
 
 class State(object):
@@ -22,6 +23,7 @@ READY = State("ready")
 SENSOR_2 = State("reading second sensor")
 RESET_1 = State("resetting")
 RESET_2 = State("reset complete")
+CALCULATE = State("calucating delay")
 
 blink_time = time.time()
 state_time = time.time()
@@ -30,8 +32,8 @@ pwm_on = time.time()
 pwm_off = time.time()
 pwm_state = True
 
-tgt_on = .008
-tgt_off =  .002
+tgt_on = .8
+tgt_off =  .2
 
 sensor1 = 0
 sensor2 = 0
@@ -65,10 +67,13 @@ while True:
             sensor1 = loop_time
             state_change(SENSOR_2,loop_time)
     elif state is SENSOR_2:
-        if GPIO.input(12):
+#        if GPIO.input(12):
+#            sensor2 = loop_time
+#            GPIO.output(13,False)
+#            state_change(RESET,loop_time)
+        if not GPIO.input(11):
             sensor2 = loop_time
-            GPIO.output(13,False)
-            state_change(RESET,loop_time)
+            state_change(CALCULATE,loop_time)	
     elif state is RESET_1:
         GPIO.setup(11,GPIO.OUT)
         GPIO.setup(12,GPIO.OUT)
@@ -76,12 +81,13 @@ while True:
         GPIO.output(12,False)
         state_change(RESET_2,loop_time)
     elif state is RESET_2:
-        print "Sensed interval:", sensor2-sensor1
         GPIO.setup(11,GPIO.IN)
         GPIO.setup(12,GPIO.IN)
         GPIO.output(13,True)
+        state_change(CALCULATE,loop_time)
+    elif state is CALCULATE:
+        print "Sensed interval:", sensor2-sensor1
         state_change(READY,loop_time)
-
     elif state is STARTUP:
         state_change(READY,loop_time)
         GPIO.output(15,False)
